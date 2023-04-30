@@ -33,7 +33,7 @@
 import EditIcon from '../icons/EditIcon';
 import CancelIcon from '../icons/CancelIcon';
 import ConfirmIcon from '../icons/ConfirmIcon';
-import InteractsWithResourceInformation from 'nova/mixins/InteractsWithResourceInformation';
+import InteractsWithResourceInformation from 'laravel-nova/mixins/InteractsWithResourceInformation.js';
 
 export default {
   props: ['resourceName', 'field'],
@@ -69,26 +69,30 @@ export default {
     },
 
     async updateFieldValue() {
-      this.loading = true;
-      try {
-        await Nova.request().post(`/nova-vendor/nova-inline-text-field/update/${this.resourceName}`, {
+        this.loading = true;
+
+        Nova.request().post(`/nova-vendor/nova-inline-text-field/update/${this.resourceName}`, {
           _inlineResourceId: this.field.resourceId,
           _inlineAttribute: this.field.attribute,
           [this.field.attribute]: this.fieldValue,
-        });
-        this.editing = false;
-        this.field.value = this.fieldValue;
+        })
+        .then((response) => {
+            this.loading = false;
 
-        Nova.success(
-          this.__('The :resource was updated!', {
-            resource: this.resourceInformation.singularLabel.toLowerCase(),
-          })
-        );
-      } catch (e) {
-        console.error(e);
-        Nova.error(this.__('There was a problem submitting the form.'));
-      }
-      this.loading = false;
+            this.editing = false;
+            this.field.value = response.data.value;
+
+            Nova.success(
+              this.__('The :resource was updated!', {
+                resource: this.resourceInformation.singularLabel.toLowerCase(),
+              })
+            );
+        })
+        .catch((err) => {
+            this.loading = false;
+            console.error(err);
+            Nova.error(this.__('There was a problem submitting the form.'));
+        })
     },
   },
 
